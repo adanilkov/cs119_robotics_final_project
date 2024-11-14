@@ -1,0 +1,2 @@
+brl_pxh_api
+-DCATKIN_DEVEL_PREFIX=/home/brl/object_picker/devel -DCMAKE_INSTALL_PREFIX=/home/brl/object_picker/install -G Unix Makefiles
