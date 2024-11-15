@@ -1,0 +1,7 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~max_velocity_scaling_factor" : \b [double] Scaling factor for optionally reducing the maximum joint velocity. min: 0.01, default: 1.0, max: 1.0
+- \b "~max_acceleration_scaling_factor" : \b [double] Scaling factor for optionally reducing the maximum joint acceleration. min: 0.01, default: 1.0, max: 1.0
+

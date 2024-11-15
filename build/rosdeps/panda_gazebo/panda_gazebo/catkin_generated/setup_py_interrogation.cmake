@@ -1,0 +1,7 @@
+set(panda_gazebo_SETUP_PY_SETUP_MODULE "setuptools")
+set(panda_gazebo_SETUP_PY_VERSION "2.17.6")
+set(panda_gazebo_SETUP_PY_SCRIPTS "")
+set(panda_gazebo_SETUP_PY_PACKAGES "panda_gazebo")
+set(panda_gazebo_SETUP_PY_PACKAGE_DIRS "src/panda_gazebo")
+set(panda_gazebo_SETUP_PY_MODULES "")
+set(panda_gazebo_SETUP_PY_MODULE_DIRS "")

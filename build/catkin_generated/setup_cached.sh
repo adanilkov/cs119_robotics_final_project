@@ -8,4 +8,3 @@
 
 # modified environment variables
 export PWD='/home/brl/object_picker/build'
-export PYTHONPATH="/home/brl/object_picker/devel/lib/python3/dist-packages:$PYTHONPATH"
