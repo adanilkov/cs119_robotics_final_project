@@ -8,3 +8,4 @@
 
 # modified environment variables
 export PWD='/home/brl/object_picker/build'
+export ROS_PACKAGE_PATH='/home/brl/object_picker/src:/home/brl/catkin_ws/src:/home/brl/interbotix_ws/src:/opt/ros/noetic/share'

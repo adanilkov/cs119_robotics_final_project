@@ -3,6 +3,9 @@ import rospy
 
 from brl_pxh_api.brl_pxh_client import BrlPxhClient 
 import gymnasium as gym
+from ros_gazebo_gym.core.helpers import build_catkin_ws
+
+# build_catkin_ws("./", False)
 
 env = gym.make("ros_gazebo_gym:PandaReach-v1", max_episode_steps=1000, positive_reward=False, control_type="effort")
 

@@ -1,0 +1,2 @@
+rosdeps/panda_gazebo/franka_ros/franka_ros
+/home/brl/object_picker/devel/.private/franka_ros/cmake.lock /home/brl/object_picker/devel/./cmake.lock

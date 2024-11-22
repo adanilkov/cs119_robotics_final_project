@@ -57,6 +57,7 @@ all: gtest/all
 all: rosdeps/panda_gazebo/franka_ros/franka_ros/all
 all: rosdeps/panda_gazebo/franka_ros/franka_description/all
 all: ros-gazebo-gym/all
+all: ros-gazebo-gym-examples/all
 all: brl_pxh_api/all
 all: rosdeps/panda_gazebo/franka_ros/franka_gripper/all
 all: rosdeps/panda_gazebo/franka_ros/franka_msgs/all
@@ -74,6 +75,7 @@ preinstall: gtest/preinstall
 preinstall: rosdeps/panda_gazebo/franka_ros/franka_ros/preinstall
 preinstall: rosdeps/panda_gazebo/franka_ros/franka_description/preinstall
 preinstall: ros-gazebo-gym/preinstall
+preinstall: ros-gazebo-gym-examples/preinstall
 preinstall: brl_pxh_api/preinstall
 preinstall: rosdeps/panda_gazebo/franka_ros/franka_gripper/preinstall
 preinstall: rosdeps/panda_gazebo/franka_ros/franka_msgs/preinstall
@@ -96,6 +98,7 @@ clean: gtest/clean
 clean: rosdeps/panda_gazebo/franka_ros/franka_ros/clean
 clean: rosdeps/panda_gazebo/franka_ros/franka_description/clean
 clean: ros-gazebo-gym/clean
+clean: ros-gazebo-gym-examples/clean
 clean: brl_pxh_api/clean
 clean: rosdeps/panda_gazebo/franka_ros/franka_gripper/clean
 clean: rosdeps/panda_gazebo/franka_ros/franka_msgs/clean
@@ -295,6 +298,24 @@ ros-gazebo-gym/clean: ros-gazebo-gym/CMakeFiles/ros_gazebo_gym_genlisp.dir/clean
 ros-gazebo-gym/clean: ros-gazebo-gym/CMakeFiles/ros_gazebo_gym_generate_messages_cpp.dir/clean
 
 .PHONY : ros-gazebo-gym/clean
+
+#=============================================================================
+# Directory level rules for directory ros-gazebo-gym-examples
+
+# Recursive "all" directory target.
+ros-gazebo-gym-examples/all:
+
+.PHONY : ros-gazebo-gym-examples/all
+
+# Recursive "preinstall" directory target.
+ros-gazebo-gym-examples/preinstall:
+
+.PHONY : ros-gazebo-gym-examples/preinstall
+
+# Recursive "clean" directory target.
+ros-gazebo-gym-examples/clean:
+
+.PHONY : ros-gazebo-gym-examples/clean
 
 #=============================================================================
 # Directory level rules for directory rosdeps/panda_gazebo/franka_ros/franka_control
