@@ -199,6 +199,7 @@ class PX100GazeboClient:
             self.rate.sleep()
 
     def _wait_until_set_points_reached(self):
+        # TODO: Add timeout?
         while not rospy.is_shutdown() and not all(
             [
                 self.waist_state is not None
