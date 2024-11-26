@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find interbotix_xsarm_gazebo)/launch/xsarm_gazebo.launch">
+    <arg name="robot_model" value="px100" />
+  </include>
+
+  <!-- <node name="brl_pxh_rack" pkg="brl_pxh_api" type="brl_pxh_rack.py" output="screen" /> -->
+</launch>

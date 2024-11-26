@@ -1,9 +1,0 @@
-<launch>  
-    <include file="$(find interbotix_xsarm_control)/launch/xsarm_control.launch" >
-        <arg name="robot_model" value="px100" />
-        <arg name="use_sim" value="false" />
-    </include>
-
-
-    <include file="$(find usb_cam)/launch/usb_cam-test.launch" />
-</launch>

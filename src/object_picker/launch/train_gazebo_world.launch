@@ -1,0 +1,9 @@
+<launch>
+  <!-- Start Gazebo with an empty world -->
+  <arg name="world_name" default="$(find gazebo_ros)/worlds/empty.world" />
+  
+  <!-- Launch Gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(arg world_name)" />
+  </include>
+</launch>
