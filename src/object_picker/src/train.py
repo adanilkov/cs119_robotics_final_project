@@ -2,11 +2,13 @@
 
 from datetime import datetime
 import math
+import random
 
 import numpy as np
 import time
 import rospy
 from gymnasium import spaces, utils, Env
+from stable_baselines3 import SAC
 import actionlib
 import tf2_ros
 from tf2_geometry_msgs import PoseStamped
@@ -26,11 +28,6 @@ from std_msgs.msg import Float32, Float64, Float64MultiArray, Header, ColorRGBA
 from rospy.exceptions import ROSException, ROSInterruptException
 from gazebo_msgs.srv import SetPhysicsProperties
 from std_srvs.srv import Empty
-
-
-# IMPORTANT: Run the following two processes in separate terminals before running this script:
-#   1. `roscore`
-#   2. `roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=px100 use_position_controllers:=true`
 
 
 # Valid position ranges
@@ -155,6 +152,9 @@ class PX100GazeboClient:
         self.wrist_angle_state = None
         self.right_finger_state = None
         self.left_finger_state = None
+        # HACK: Left finger never publishes state...
+        # ...We use this attr instead
+        self.current_approx_left_finger_position = None
 
     def waist_state_callback(self, msg):
         self.waist_state = msg
@@ -192,7 +192,7 @@ class PX100GazeboClient:
                 self.elbow_state is None,
                 self.wrist_angle_state is None,
                 self.right_finger_state is None,
-                # HACK: This one never publishes
+                # HACK: Left finger never publishes state
                 # self.left_finger_state is None,
             ]
         ):
@@ -231,7 +231,7 @@ class PX100GazeboClient:
                     self.right_finger_state.set_point,
                     abs_tol=self.CLOSENESS_TOL,
                 ),
-                # HACK: This one never publishes
+                # HACK: Left finger never publishes state
                 # self.left_finger_state is not None
                 # and math.isclose(
                 #     self.left_finger_state.process_value,
@@ -262,6 +262,7 @@ class PX100GazeboClient:
                     )
                 else:
                     print(f"{joint_name} - State: None")
+            self.rate.sleep()
 
     def set_joint_positions(
         self,
@@ -314,18 +315,43 @@ class PX100GazeboClient:
 
         # Wait until set points have more or less been reached
         self._wait_until_set_points_reached()
+        # HACK: Left finger never publishes state...
+        # ...so we manually set this as an approximation of its position
+        self.current_approx_left_finger_position = left_finger
+
+    def get_joint_positions(self) -> np.ndarray:
+        """Returns the current (most recent) joint positions as a numpy array.
+
+        NOTE: Order is [waist, should, elbow, wrist_angle, right_finger, left_finger]
+        """
+        self._await_subscriptions()
+        positions = [
+            self.waist_state.process_value,
+            self.shoulder_state.process_value,
+            self.elbow_state.process_value,
+            self.wrist_angle_state.process_value,
+            self.right_finger_state.process_value,
+            # HACK: Left finger never publishes state
+            # self.left_finger_state.process_value,
+            self.current_approx_left_finger_position,
+        ]
+        return np.array(positions)
 
 
 class PX100PickEnv(Env):
     def __init__(self):
+        super(PX100PickEnv, self).__init__()
+
         self.action_space = spaces.Box(
-            low=ACTION_SPACE_LOW, high=ACTION_SPACE_HIGH, dtype=np.float32
+            low=np.array(ACTION_SPACE_LOW),
+            high=np.array(ACTION_SPACE_HIGH),
+            dtype=np.float32,
         )
         self.observation_space = spaces.Box(
-            low=OBS_SPACE_LOW, high=OBS_SPACE_HIGH, dtype=np.float32
+            low=np.array(OBS_SPACE_LOW), high=np.array(OBS_SPACE_HIGH), dtype=np.float32
         )
-        self.state = None
-        self.done = False
+
+        self.px100 = PX100GazeboClient()
 
     def reset(self, seed=None, options=None):
         """
@@ -333,39 +359,66 @@ class PX100PickEnv(Env):
 
         Args:
             seed (int, optional): Random seed for reproducibility.
-            return_info (bool, optional): Whether to return additional info along with the observation.
             options (dict, optional): Additional options for resetting the environment.
 
         Returns:
             observation (np.ndarray): The first observation after reset.
+            info (dict): Any additional info (can be empty).
         """
-        # Initialize state (example: random values between -1 and 1 for a 4D state space)
-        self.state = np.random.uniform(-1, 1, size=(4,))
-        return self.state
+        # Move arm to home position
+        # TODO: Refer to brl_pxh_api to figure out what home position should be
+        self.px100.set_joint_positions(
+            waist=0.0,
+            shoulder=0.0,
+            elbow=0.0,
+            wrist_angle=0.0,
+            right_finger=RIGHT_FINGER_LIM[0],
+            left_finger=LEFT_FINGER_LIM[1],
+        )
+        # TODO: Move object to start location
+
+        # Get the joint positions as the observation
+        observation = self.px100.get_joint_positions()
+
+        # Return the observation and an empty dictionary (for reset info)
+        return observation, {}
 
     def step(self, action):
         """
-        Apply the given action and return the new state, reward, done flag, and info.
+        Take a step in the environment based on the given action.
 
         Args:
-            action (int): The action taken by the agent.
+            action (np.ndarray): The action taken by the agent.
 
         Returns:
-            tuple: (next_state, reward, done, info)
+            observation (np.ndarray): The next observation after taking the action.
+            reward (float): The reward received for taking the action.
+            terminated (bool): Whether the episode has terminated.
+            truncated (bool): Whether the episode was truncated (e.g., due to time limit).
+            info (dict): Additional information about the step.
         """
-        # Example: Move state based on action
-        # Here you can define how the action modifies the state.
-        self.state = np.random.uniform(
-            -1, 1, size=(4,)
-        )  # Random next state as a placeholder
+        current_joint_positions = self.px100.get_joint_positions()
+        target_joint_positions = current_joint_positions + action
+        # Take action
+        self.px100.set_joint_positions(
+            waist=target_joint_positions[0],
+            shoulder=target_joint_positions[1],
+            elbow=target_joint_positions[2],
+            wrist_angle=target_joint_positions[3],
+            right_finger=target_joint_positions[4],
+            left_finger=target_joint_positions[5],
+        )
+        # Make observation of resulting state ("next_state")
+        next_state = self.px100.get_joint_positions()
 
-        # Example reward calculation (this would depend on your environment logic)
-        reward = 1.0  # A placeholder reward
+        # TODO: Determine if episode should be flagged as done or truncated
+        done = random.choices([False, True], weights=[96, 4], k=1)[0]  # FIXME
+        truncated = False  # FIXME
 
-        # Example done flag (environment logic would determine when it's done)
-        done = False  # Change based on your logic
+        # TODO: Calculate step reward
+        reward = 1.0  # FIXME
 
-        return self.state, reward, done, {}
+        return next_state, reward, done, truncated, {}
 
 
 def unpause_gazebo():
@@ -380,17 +433,35 @@ def pause_gazebo():
     pause_gazebo()
 
 
+# IMPORTANT: Run the following two commands in their own terminals before running this script:
+#   1. `roscore`
+#   2. `roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=px100 use_position_controllers:=true`
+
 if __name__ == "__main__":
-    import random
+    # Uncomment to test Gazebo Client
+    # unpause_gazebo()
+    # time.sleep(1)  # Necessary after unpause
+    # client = PX100GazeboClient()
+    # client.set_joint_positions(
+    #     waist=random.uniform(*WAIST_LIM),
+    #     shoulder=random.uniform(*SHOULDER_LIM) / 2,
+    #     elbow=random.uniform(*ELBOW_LIM) / 2,
+    #     wrist_angle=random.uniform(*WRIST_ANGLE_LIM) / 2,
+    #     right_finger=random.uniform(*RIGHT_FINGER_LIM) / 2,
+    #     left_finger=random.uniform(*LEFT_FINGER_LIM) / 2,
+    # )
 
     unpause_gazebo()
     time.sleep(1)  # Necessary after unpause
-    client = PX100GazeboClient()
-    client.set_joint_positions(
-        waist=random.uniform(*WAIST_LIM),
-        shoulder=random.uniform(*SHOULDER_LIM) / 2,
-        elbow=random.uniform(*ELBOW_LIM) / 2,
-        wrist_angle=random.uniform(*WRIST_ANGLE_LIM) / 2,
-        right_finger=random.uniform(*RIGHT_FINGER_LIM) / 2,
-        left_finger=random.uniform(*LEFT_FINGER_LIM) / 2,
-    )
+    env = PX100PickEnv()
+    model = SAC("MlpPolicy", env, verbose=1)
+    model.learn(total_timesteps=1000)  # , progress_bar=True)
+    model.save("temp.model")
+
+
+# Major obstacles:
+# 1. There is the possibility that the px100 moves in to a position such that it is jammed into the ground,
+#    potentially rendering it unable to move back to its home position.
+
+# TODO:
+# 1. Add the ball model to the world and reset its position with each episode
