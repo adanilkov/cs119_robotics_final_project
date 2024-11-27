@@ -9,6 +9,7 @@ import time
 import rospy
 from gymnasium import spaces, utils, Env
 from stable_baselines3 import SAC
+from stable_baselines3.common.callbacks import CheckpointCallback
 import actionlib
 import tf2_ros
 import tf
@@ -38,6 +39,9 @@ from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Pose, Twist
 
+# Misc
+TENSORBOARD_LOG_DIR = "./src/object_picker/logs/"
+CHECKPOINT_DIR = "./src/object_picker/checkpoints/"
 
 # Valid position ranges
 WAIST_LIM = (-3.141583, 3.141583)
@@ -650,6 +654,7 @@ class PX100PickEnv(Env):
             grabber_obj_dist = np.mean(
                 [
                     grabber_base_dist,
+                    grabber_base_dist,  # Weight the base distance more
                     left_finger_dist,
                     right_finger_dist,
                 ],
@@ -660,8 +665,9 @@ class PX100PickEnv(Env):
                 grabber_obj_dist, limits=(0, self.GRABBER_OBJ_DIST_CLIP)
             )
             grabber_object_dist_reward = (
-                self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist
-            ) / self.GRABBER_OBJ_DIST_CLIP
+                64 * (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) ** 3
+            )
+            # grabber_object_dist_reward = (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) / self.GRABBER_OBJ_DIST_CLIP
 
         # Combine reward componentsgrabber_object_dist_reward
         reward = obj_target_dist_reward + grabber_object_dist_reward
@@ -673,9 +679,11 @@ class PX100PickEnv(Env):
         return joint_positions, reward, done, truncated, {}
 
 
-# IMPORTANT: Run the following two commands in their own terminals before running this script:
+# NOTE: Run the following two commands in their own terminals before running this script:
 #   1. `roscore`
 #   2. `roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=px100 use_position_controllers:=true`
+#       or
+#      `roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=px100 use_position_controllers:=true gui:=false use_rviz:=true`
 
 if __name__ == "__main__":
     rospy.init_node("px100_training")
@@ -710,20 +718,17 @@ if __name__ == "__main__":
     # time.sleep(1)
 
     unpause_gazebo()
-    time.sleep(1)  # Necessary after unpause
+    time.sleep(1)  # Necessary after unpausing gazebo
     env = PX100PickEnv()
-    model = SAC("MlpPolicy", env, verbose=1)
+    model = SAC("MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR)
+
+    checkpoint_callback = CheckpointCallback(
+        save_freq=10000, save_path=CHECKPOINT_DIR, name_prefix="px100_checkpoint"
+    )
+
     model.learn(log_interval=20, total_timesteps=1_000_000)  # , progress_bar=True)
     try:
         model.save("temp.model")
     except:
         pass
-    print("ur mom")
-
-
-# Major obstacles:
-# 1. There is the possibility that the px100 moves in to a position such that it is jammed into the ground,
-#    potentially rendering it unable to move back to its home position.
-
-# TODO:
-# 1. Add the ball model to the world and reset its position with each episode
+    print("success")
