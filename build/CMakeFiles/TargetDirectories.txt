@@ -179,6 +179,13 @@
 /home/brl/object_picker/build/brl_pxh_api/CMakeFiles/_brl_pxh_api_generate_messages_check_deps_GripperPressureResult.dir
 /home/brl/object_picker/build/brl_pxh_api/CMakeFiles/_brl_pxh_api_generate_messages_check_deps_JointGroupRadsActionGoal.dir
 /home/brl/object_picker/build/brl_pxh_api/CMakeFiles/_brl_pxh_api_generate_messages_check_deps_JointGroupRadsActionResult.dir
+/home/brl/object_picker/build/object_picker/CMakeFiles/install/strip.dir
+/home/brl/object_picker/build/object_picker/CMakeFiles/install/local.dir
+/home/brl/object_picker/build/object_picker/CMakeFiles/install.dir
+/home/brl/object_picker/build/object_picker/CMakeFiles/list_install_components.dir
+/home/brl/object_picker/build/object_picker/CMakeFiles/rebuild_cache.dir
+/home/brl/object_picker/build/object_picker/CMakeFiles/edit_cache.dir
+/home/brl/object_picker/build/object_picker/CMakeFiles/test.dir
 /home/brl/object_picker/build/rosdeps/panda_gazebo/franka_ros/franka_gripper/CMakeFiles/install/strip.dir
 /home/brl/object_picker/build/rosdeps/panda_gazebo/franka_ros/franka_gripper/CMakeFiles/install/local.dir
 /home/brl/object_picker/build/rosdeps/panda_gazebo/franka_ros/franka_gripper/CMakeFiles/list_install_components.dir

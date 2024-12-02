@@ -1,0 +1,8 @@
+prefix=/home/brl/object_picker/devel
+
+Name: object_picker
+Description: Description of object_picker
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

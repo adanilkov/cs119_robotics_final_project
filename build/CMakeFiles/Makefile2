@@ -59,6 +59,7 @@ all: rosdeps/panda_gazebo/franka_ros/franka_description/all
 all: ros-gazebo-gym/all
 all: ros-gazebo-gym-examples/all
 all: brl_pxh_api/all
+all: object_picker/all
 all: rosdeps/panda_gazebo/franka_ros/franka_gripper/all
 all: rosdeps/panda_gazebo/franka_ros/franka_msgs/all
 all: rosdeps/panda_gazebo/franka_ros/franka_visualization/all
@@ -77,6 +78,7 @@ preinstall: rosdeps/panda_gazebo/franka_ros/franka_description/preinstall
 preinstall: ros-gazebo-gym/preinstall
 preinstall: ros-gazebo-gym-examples/preinstall
 preinstall: brl_pxh_api/preinstall
+preinstall: object_picker/preinstall
 preinstall: rosdeps/panda_gazebo/franka_ros/franka_gripper/preinstall
 preinstall: rosdeps/panda_gazebo/franka_ros/franka_msgs/preinstall
 preinstall: rosdeps/panda_gazebo/franka_ros/franka_visualization/preinstall
@@ -100,6 +102,7 @@ clean: rosdeps/panda_gazebo/franka_ros/franka_description/clean
 clean: ros-gazebo-gym/clean
 clean: ros-gazebo-gym-examples/clean
 clean: brl_pxh_api/clean
+clean: object_picker/clean
 clean: rosdeps/panda_gazebo/franka_ros/franka_gripper/clean
 clean: rosdeps/panda_gazebo/franka_ros/franka_msgs/clean
 clean: rosdeps/panda_gazebo/franka_ros/franka_visualization/clean
@@ -264,6 +267,24 @@ gtest/googletest/clean: gtest/googletest/CMakeFiles/gtest_main.dir/clean
 gtest/googletest/clean: gtest/googletest/CMakeFiles/gtest.dir/clean
 
 .PHONY : gtest/googletest/clean
+
+#=============================================================================
+# Directory level rules for directory object_picker
+
+# Recursive "all" directory target.
+object_picker/all:
+
+.PHONY : object_picker/all
+
+# Recursive "preinstall" directory target.
+object_picker/preinstall:
+
+.PHONY : object_picker/preinstall
+
+# Recursive "clean" directory target.
+object_picker/clean:
+
+.PHONY : object_picker/clean
 
 #=============================================================================
 # Directory level rules for directory ros-gazebo-gym

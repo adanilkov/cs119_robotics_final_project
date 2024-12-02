@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./src/ros-gazebo-gym/src"
+    ]
+}

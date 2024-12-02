@@ -66,11 +66,11 @@ class BrlPxhApiTester:
     def _test_delta_increments(self):
         import random
         import time
-
-        joint_0_limits = [-3.141583, 3.141583]
-        joint_1_limits = [-1.937315, 1.867502]
-        joint_2_limits = [-2.111848, 1.605703]
-        joint_3_limits = [-1.745329, 2.146755]
+        # waist, shoulder, elbow, wrist_angle
+        joint_0_limits = [-3.141583, 3.141583]  # waist
+        joint_1_limits = [-1.937315, 1.867502]  # shoulder
+        joint_2_limits = [-2.111848, 1.605703]  # elbow
+        joint_3_limits = [-1.745329, 2.146755]  # wrist_angle
 
         self.api_client.brl_go_to_home_pose()
 
