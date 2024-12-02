@@ -56,8 +56,8 @@ MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 120
 MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 50
 MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 50
 MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 50
-MAX_RIGHT_FINGER_DELTA = (RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) / 15
-MAX_LEFT_FINGER_DELTA = (LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) / 15
+MAX_RIGHT_FINGER_DELTA = (RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) / 4  # was 15
+MAX_LEFT_FINGER_DELTA = (LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) / 4  # was 15
 
 # Observation space bounds
 OBS_SPACE_LOW = [
@@ -597,14 +597,20 @@ class PX100PickEnv(Env):
         current_joint_positions = self.px100.get_joint_positions()
         target_joint_positions = current_joint_positions + action
 
-        # Take action
+        # Ensure that the right and left fingers move in opposite directions by the same amount
+        target_right_finger = target_joint_positions[4]  # Right finger target position
+        target_left_finger = (
+            -target_right_finger
+        )  # Left finger target position is opposite
+
+        # Set joint positions, using mirrored finger movements
         self.px100.set_joint_positions(
             waist=target_joint_positions[0],
             shoulder=target_joint_positions[1],
             elbow=target_joint_positions[2],
             wrist_angle=target_joint_positions[3],
-            right_finger=target_joint_positions[4],
-            left_finger=target_joint_positions[5],
+            right_finger=target_right_finger,
+            left_finger=target_left_finger,  # Mirrored finger position
         )
 
         # Update episode state tracking variables
@@ -629,6 +635,7 @@ class PX100PickEnv(Env):
         gripper_prop_link_position = self.px100.get_gripper_prop_link_position()
         right_finger_link_position = self.px100.get_right_finger_link_position()
         left_finger_link_position = self.px100.get_left_finger_link_position()
+
         if any(
             [
                 pos is None
@@ -667,12 +674,34 @@ class PX100PickEnv(Env):
             grabber_object_dist_reward = (
                 64 * (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) ** 3
             )
-            # grabber_object_dist_reward = (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) / self.GRABBER_OBJ_DIST_CLIP
 
-        # Combine reward componentsgrabber_object_dist_reward
-        reward = obj_target_dist_reward + grabber_object_dist_reward
+        # Finger closure reward component
+        # Encourage the fingers to close around the object
+        finger_closure_threshold = 0.05  # Threshold for fingers closing around object
+        finger_to_finger_dist = np.linalg.norm(
+            np.array(left_finger_link_position) - np.array(right_finger_link_position)
+        )
 
-        # Check for episode exit conditions
+        finger_closure_reward = max(
+            0,
+            (finger_closure_threshold - finger_to_finger_dist)
+            / finger_closure_threshold,
+        )
+
+        # Object grasp reward component
+        # Add reward if fingers are close and the object is within grasp range
+        grasp_reward = 0
+        if finger_to_finger_dist < 0.05 and np.linalg.norm(grabber_base_dist) < 0.05:
+            grasp_reward = 1.0  # Full reward when object is likely grasped
+
+        # Total reward
+        reward = (
+            obj_target_dist_reward
+            + grabber_object_dist_reward
+            + finger_closure_reward
+            + grasp_reward
+        )
+
         done = self.n_steps_elapsed >= self.MAX_STEPS_PER_EPISODE
         truncated = False  # FIXME: True when stuck
 
@@ -723,10 +752,16 @@ if __name__ == "__main__":
     model = SAC("MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR)
 
     checkpoint_callback = CheckpointCallback(
-        save_freq=10000, save_path=CHECKPOINT_DIR, name_prefix="px100_checkpoint"
+        save_freq=10000,
+        save_path=CHECKPOINT_DIR,
+        name_prefix="px100_checkpoint",
+        save_replay_buffer=True,
+        save_vecnormalize=True,
     )
 
-    model.learn(log_interval=20, total_timesteps=1_000_000)  # , progress_bar=True)
+    model.learn(
+        log_interval=20, total_timesteps=1_000_000, callback=checkpoint_callback
+    )  # , progress_bar=True)
     try:
         model.save("temp.model")
     except:
