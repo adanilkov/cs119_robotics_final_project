@@ -53,9 +53,9 @@ LEFT_FINGER_LIM = (0.017, 0.036)
 
 # Max position change per step
 MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 120
-MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 50
-MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 50
-MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 50
+MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 30
+MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 30
+MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 30
 MAX_RIGHT_FINGER_DELTA = (RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) / 4  # was 15
 MAX_LEFT_FINGER_DELTA = (LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) / 4  # was 15
 
@@ -95,8 +95,40 @@ ACTION_SPACE_HIGH = [
     MAX_LEFT_FINGER_DELTA,
 ]
 
-PICKABLE_OBJ_MODEL_NAME = "red_sphere"
-PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = 0.01  # I.e., the radius of a sphere (1cm)
+# PICKABLE_OBJ_MODEL_NAME = "red_sphere"
+# PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = 0.01  # I.e., the radius of a sphere (1cm)
+# PICKABLE_OBJ_SDF = f"""
+# <sdf version='1.6'>
+#     <model name='{PICKABLE_OBJ_MODEL_NAME}'>
+#         <static>false</static>
+#         <link name='link'>
+#             <collision name='collision'>
+#                 <geometry>
+#                     <sphere>
+#                         <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET }</radius>
+#                     </sphere>
+#                 </geometry>
+#             </collision>
+#             <visual name='visual'>
+#                 <geometry>
+#                     <sphere>
+#                         <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET }</radius>
+#                     </sphere>
+#                 </geometry>
+#                 <material>
+#                     <ambient>1 0 0 1</ambient>  <!-- Red color -->
+#                     <diffuse>1 0 0 1</diffuse>  <!-- Red color -->
+#                 </material>
+#             </visual>
+#         </link>
+#     </model>
+# </sdf>
+# """
+
+PICKABLE_OBJ_MODEL_NAME = "red_cube"
+PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = (
+    0.01  # For cubes, we can use half the side length to represent the offset
+)
 PICKABLE_OBJ_SDF = f"""
 <sdf version='1.6'>
     <model name='{PICKABLE_OBJ_MODEL_NAME}'>
@@ -104,16 +136,16 @@ PICKABLE_OBJ_SDF = f"""
         <link name='link'>
             <collision name='collision'>
                 <geometry>
-                    <sphere>
-                        <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET }</radius>
-                    </sphere>
+                    <box>
+                        <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2}</size> <!-- Cube size -->
+                    </box>
                 </geometry>
             </collision>
             <visual name='visual'>
                 <geometry>
-                    <sphere>
-                        <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET }</radius>
-                    </sphere>
+                    <box>
+                        <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2}</size> <!-- Cube size -->
+                    </box>
                 </geometry>
                 <material>
                     <ambient>1 0 0 1</ambient>  <!-- Red color -->
@@ -121,6 +153,17 @@ PICKABLE_OBJ_SDF = f"""
                 </material>
             </visual>
         </link>
+        <inertial>
+            <mass>0.1</mass> <!-- Light mass -->
+            <inertia>
+                <ixx>0.0001</ixx>
+                <iyy>0.0001</iyy>
+                <izz>0.0001</izz>
+                <ixy>0</ixy>
+                <ixz>0</ixz>
+                <iyz>0</iyz>
+            </inertia>
+        </inertial>
     </model>
 </sdf>
 """
@@ -583,10 +626,8 @@ class PX100PickEnv(Env):
     def step(self, action):
         """
         Take a step in the environment based on the given action.
-
         Args:
             action (np.ndarray): The action taken by the agent.
-
         Returns:
             observation (np.ndarray): The next observation after taking the action.
             reward (float): The reward received for taking the action.
@@ -597,20 +638,14 @@ class PX100PickEnv(Env):
         current_joint_positions = self.px100.get_joint_positions()
         target_joint_positions = current_joint_positions + action
 
-        # Ensure that the right and left fingers move in opposite directions by the same amount
-        target_right_finger = target_joint_positions[4]  # Right finger target position
-        target_left_finger = (
-            -target_right_finger
-        )  # Left finger target position is opposite
-
-        # Set joint positions, using mirrored finger movements
+        # Take action
         self.px100.set_joint_positions(
             waist=target_joint_positions[0],
             shoulder=target_joint_positions[1],
             elbow=target_joint_positions[2],
             wrist_angle=target_joint_positions[3],
-            right_finger=target_right_finger,
-            left_finger=target_left_finger,  # Mirrored finger position
+            right_finger=target_joint_positions[4],
+            left_finger=target_joint_positions[5],
         )
 
         # Update episode state tracking variables
@@ -635,7 +670,6 @@ class PX100PickEnv(Env):
         gripper_prop_link_position = self.px100.get_gripper_prop_link_position()
         right_finger_link_position = self.px100.get_right_finger_link_position()
         left_finger_link_position = self.px100.get_left_finger_link_position()
-
         if any(
             [
                 pos is None
@@ -674,34 +708,12 @@ class PX100PickEnv(Env):
             grabber_object_dist_reward = (
                 64 * (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) ** 3
             )
+            # grabber_object_dist_reward = (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) / self.GRABBER_OBJ_DIST_CLIP
 
-        # Finger closure reward component
-        # Encourage the fingers to close around the object
-        finger_closure_threshold = 0.05  # Threshold for fingers closing around object
-        finger_to_finger_dist = np.linalg.norm(
-            np.array(left_finger_link_position) - np.array(right_finger_link_position)
-        )
+        # Combine reward componentsgrabber_object_dist_reward
+        reward = obj_target_dist_reward + grabber_object_dist_reward
 
-        finger_closure_reward = max(
-            0,
-            (finger_closure_threshold - finger_to_finger_dist)
-            / finger_closure_threshold,
-        )
-
-        # Object grasp reward component
-        # Add reward if fingers are close and the object is within grasp range
-        grasp_reward = 0
-        if finger_to_finger_dist < 0.05 and np.linalg.norm(grabber_base_dist) < 0.05:
-            grasp_reward = 1.0  # Full reward when object is likely grasped
-
-        # Total reward
-        reward = (
-            obj_target_dist_reward
-            + grabber_object_dist_reward
-            + finger_closure_reward
-            + grasp_reward
-        )
-
+        # Check for episode exit conditions
         done = self.n_steps_elapsed >= self.MAX_STEPS_PER_EPISODE
         truncated = False  # FIXME: True when stuck
 
