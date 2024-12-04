@@ -568,7 +568,7 @@ class PX100GazeboClient:
 
 
 class PX100PickEnv(Env):
-    MAX_STEPS_PER_EPISODE = 15
+    MAX_STEPS_PER_EPISODE = 20
     PICKABLE_OBJ_START_POS = (0.25, 0.0, PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.001)
     PICKABLE_OBJ_TARGET_POS = np.array(
         [
@@ -592,7 +592,13 @@ class PX100PickEnv(Env):
             dtype=np.float32,
         )
         self.observation_space = spaces.Box(
-            low=np.array(OBS_SPACE_LOW), high=np.array(OBS_SPACE_HIGH), dtype=np.float32
+            low=np.array(
+                OBS_SPACE_LOW + [-np.inf, -np.inf, -np.inf]
+            ),  # Joint positions lower bounds + ball position
+            high=np.array(
+                OBS_SPACE_HIGH + [np.inf, np.inf, np.inf]
+            ),  # Joint positions upper bounds + ball position
+            dtype=np.float64,
         )
 
         self.px100 = PX100GazeboClient()
@@ -637,10 +643,13 @@ class PX100PickEnv(Env):
             left_finger=LEFT_FINGER_LIM[1],
         )
         # Move object to start location
-        self.pickable_object.teleport(new_position=self.random_position())
+        ball_position = self.random_position()
+        self.pickable_object.teleport(new_position=ball_position)
 
         # Get the joint positions as the observation
-        observation = self.px100.get_joint_positions()
+        observation = np.concatenate(
+            [self.px100.get_joint_positions(), np.array(ball_position)]
+        )
 
         # Reset episode state tracking variables
         self.n_steps_elapsed = 0
@@ -653,8 +662,10 @@ class PX100PickEnv(Env):
     def step(self, action):
         """
         Take a step in the environment based on the given action.
+
         Args:
             action (np.ndarray): The action taken by the agent.
+
         Returns:
             observation (np.ndarray): The next observation after taking the action.
             reward (float): The reward received for taking the action.
@@ -738,10 +749,12 @@ class PX100PickEnv(Env):
             grabber_object_dist_reward = (
                 64 * (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) ** 3
             )
-            # grabber_object_dist_reward = (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) / self.GRABBER_OBJ_DIST_CLIP
 
-        # Combine reward componentsgrabber_object_dist_reward
+        # Combine reward components
         reward = obj_target_dist_reward + grabber_object_dist_reward
+
+        # Concatenate the joint positions and ball position
+        observation = np.concatenate([joint_positions, np.array(object_position)])
 
         # Check for episode exit conditions
         done = self.n_steps_elapsed >= self.MAX_STEPS_PER_EPISODE
@@ -749,7 +762,7 @@ class PX100PickEnv(Env):
 
         self.reward_history.append(reward)
 
-        return joint_positions, reward, done, truncated, {}
+        return observation, reward, done, truncated, {}
 
     def save_reward_history(self, filename="reward_history.txt"):
         with open(filename, "w") as f:
