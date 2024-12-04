@@ -52,10 +52,10 @@ RIGHT_FINGER_LIM = (-0.036, -0.017)
 LEFT_FINGER_LIM = (0.017, 0.036)
 
 # Max position change per step
-MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 120
-MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 30
-MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 30
-MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 30
+MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 50
+MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 25
+MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 25
+MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 25
 MAX_RIGHT_FINGER_DELTA = (RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) / 4  # was 15
 MAX_LEFT_FINGER_DELTA = (LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) / 4  # was 15
 
@@ -95,40 +95,8 @@ ACTION_SPACE_HIGH = [
     MAX_LEFT_FINGER_DELTA,
 ]
 
-# PICKABLE_OBJ_MODEL_NAME = "red_sphere"
-# PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = 0.01  # I.e., the radius of a sphere (1cm)
-# PICKABLE_OBJ_SDF = f"""
-# <sdf version='1.6'>
-#     <model name='{PICKABLE_OBJ_MODEL_NAME}'>
-#         <static>false</static>
-#         <link name='link'>
-#             <collision name='collision'>
-#                 <geometry>
-#                     <sphere>
-#                         <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET }</radius>
-#                     </sphere>
-#                 </geometry>
-#             </collision>
-#             <visual name='visual'>
-#                 <geometry>
-#                     <sphere>
-#                         <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET }</radius>
-#                     </sphere>
-#                 </geometry>
-#                 <material>
-#                     <ambient>1 0 0 1</ambient>  <!-- Red color -->
-#                     <diffuse>1 0 0 1</diffuse>  <!-- Red color -->
-#                 </material>
-#             </visual>
-#         </link>
-#     </model>
-# </sdf>
-# """
-
-PICKABLE_OBJ_MODEL_NAME = "red_cube"
-PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = (
-    0.01  # For cubes, we can use half the side length to represent the offset
-)
+PICKABLE_OBJ_MODEL_NAME = "red_sphere"
+PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = 0.01  # I.e., the radius of a sphere (1cm)
 PICKABLE_OBJ_SDF = f"""
 <sdf version='1.6'>
     <model name='{PICKABLE_OBJ_MODEL_NAME}'>
@@ -136,16 +104,16 @@ PICKABLE_OBJ_SDF = f"""
         <link name='link'>
             <collision name='collision'>
                 <geometry>
-                    <box>
-                        <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2}</size> <!-- Cube size -->
-                    </box>
+                    <sphere>
+                        <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 1.5}</radius>
+                    </sphere>
                 </geometry>
             </collision>
             <visual name='visual'>
                 <geometry>
-                    <box>
-                        <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 2}</size> <!-- Cube size -->
-                    </box>
+                    <sphere>
+                        <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 1.5 }</radius>
+                    </sphere>
                 </geometry>
                 <material>
                     <ambient>1 0 0 1</ambient>  <!-- Red color -->
@@ -167,6 +135,50 @@ PICKABLE_OBJ_SDF = f"""
     </model>
 </sdf>
 """
+# TODO: Change to red cube but fix issues with co-ordinates
+#
+# PICKABLE_OBJ_MODEL_NAME = "red_cube"
+# PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = (
+#     0.01  # For cubes, we can use half the side length to represent the offset
+# )
+# PICKABLE_OBJ_SDF = f"""
+# <sdf version='1.6'>
+#     <model name='{PICKABLE_OBJ_MODEL_NAME}'>
+#         <static>false</static>
+#         <link name='link'>
+#             <collision name='collision'>
+#                 <geometry>
+#                     <box>
+#                         <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3}</size> <!-- Cube size -->
+#                     </box>
+#                 </geometry>
+#             </collision>
+#             <visual name='visual'>
+#                 <geometry>
+#                     <box>
+#                         <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3}</size> <!-- Cube size -->
+#                     </box>
+#                 </geometry>
+#                 <material>
+#                     <ambient>1 0 0 1</ambient>  <!-- Red color -->
+#                     <diffuse>1 0 0 1</diffuse>  <!-- Red color -->
+#                 </material>
+#             </visual>
+#         </link>
+#         <inertial>
+#             <mass>0.1</mass> <!-- Light mass -->
+#             <inertia>
+#                 <ixx>0.0001</ixx>
+#                 <iyy>0.0001</iyy>
+#                 <izz>0.0001</izz>
+#                 <ixy>0</ixy>
+#                 <ixz>0</ixz>
+#                 <iyz>0</iyz>
+#             </inertia>
+#         </inertial>
+#     </model>
+# </sdf>
+# """
 
 
 def unpause_gazebo():
@@ -219,7 +231,7 @@ class PickableGazeboObjectClient:
         self.model_name = model_name
         self.model_sdf = model_sdf
 
-    def spawn(self, position=(0.0, 0.0, 0.1)):
+    def spawn(self, position=(random.uniform(-1, 1), random.uniform(-1, 1), 0.1)):
         """Spawn the model at the given position."""
         rospy.wait_for_service("/gazebo/spawn_sdf_model")
         try:
@@ -559,7 +571,11 @@ class PX100PickEnv(Env):
     MAX_STEPS_PER_EPISODE = 15
     PICKABLE_OBJ_START_POS = (0.25, 0.0, PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.001)
     PICKABLE_OBJ_TARGET_POS = np.array(
-        [0.3, 0.0, PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.2]
+        [
+            0.3,
+            0.0,
+            PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.2,
+        ]
     )
     OBJ_TARGET_DIST_CLIP = (
         np.linalg.norm(np.array(PICKABLE_OBJ_START_POS) - PICKABLE_OBJ_TARGET_POS) * 1.3
@@ -590,6 +606,15 @@ class PX100PickEnv(Env):
         self.n_steps_elapsed = 0
         self.n_steps_object_off_ground = 0
 
+        # Reward tracking
+        self.reward_history = []
+
+    def random_position(self):
+        x = 0.25 + random.uniform(-0.1, 0.1)
+        y = 0.0 + random.uniform(-0.1, 0.1)
+        z = PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.005
+        return (x, y, z)
+
     def reset(self, seed=None, options=None):
         """
         Reset the environment to the initial state and return the first observation.
@@ -612,13 +637,15 @@ class PX100PickEnv(Env):
             left_finger=LEFT_FINGER_LIM[1],
         )
         # Move object to start location
-        self.pickable_object.teleport(new_position=self.PICKABLE_OBJ_START_POS)
+        self.pickable_object.teleport(new_position=self.random_position())
 
         # Get the joint positions as the observation
         observation = self.px100.get_joint_positions()
 
         # Reset episode state tracking variables
         self.n_steps_elapsed = 0
+
+        # self.save_reward_history() #TODO: make this better, only save last reward to file
 
         # Return the observation and an empty dictionary (for reset info)
         return observation, {}
@@ -638,14 +665,17 @@ class PX100PickEnv(Env):
         current_joint_positions = self.px100.get_joint_positions()
         target_joint_positions = current_joint_positions + action
 
+        target_right_finger = target_joint_positions[4]  # Right finger target position
+        target_left_finger = -target_right_finger
+
         # Take action
         self.px100.set_joint_positions(
             waist=target_joint_positions[0],
             shoulder=target_joint_positions[1],
             elbow=target_joint_positions[2],
             wrist_angle=target_joint_positions[3],
-            right_finger=target_joint_positions[4],
-            left_finger=target_joint_positions[5],
+            right_finger=target_right_finger,
+            left_finger=target_left_finger,
         )
 
         # Update episode state tracking variables
@@ -717,7 +747,14 @@ class PX100PickEnv(Env):
         done = self.n_steps_elapsed >= self.MAX_STEPS_PER_EPISODE
         truncated = False  # FIXME: True when stuck
 
+        self.reward_history.append(reward)
+
         return joint_positions, reward, done, truncated, {}
+
+    def save_reward_history(self, filename="reward_history.txt"):
+        with open(filename, "w") as f:
+            for reward in self.reward_history:
+                f.write(f"{reward}\n")
 
 
 # NOTE: Run the following two commands in their own terminals before running this script:
@@ -762,6 +799,12 @@ if __name__ == "__main__":
     time.sleep(1)  # Necessary after unpausing gazebo
     env = PX100PickEnv()
     model = SAC("MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR)
+    # model = SAC.load(
+    #     f"{CHECKPOINT_DIR}/px100_checkpoint_180000_steps.zip",
+    #     env=env,
+    #     verbose=1,
+    #     tensorboard_log=TENSORBOARD_LOG_DIR,
+    # )
 
     checkpoint_callback = CheckpointCallback(
         save_freq=10000,
