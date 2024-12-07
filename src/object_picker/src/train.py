@@ -3,6 +3,7 @@
 from datetime import datetime
 import math
 import random
+from typing import Tuple
 
 import numpy as np
 import time
@@ -34,7 +35,9 @@ from gazebo_msgs.srv import (
     SetModelState,
     DeleteModel,
     GetModelState,
+    GetLinkState,
 )
+from tf.transformations import quaternion_from_euler
 from std_srvs.srv import Empty
 from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Pose, Twist
@@ -95,90 +98,74 @@ ACTION_SPACE_HIGH = [
     MAX_LEFT_FINGER_DELTA,
 ]
 
-PICKABLE_OBJ_MODEL_NAME = "red_sphere"
-PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = 0.01  # I.e., the radius of a sphere (1cm)
+GRIPPER_PROP_LINK_NAME = "px100/gripper_prop_link"
+RIGHT_FINGER_LINK_NAME = "px100/right_finger_link"
+LEFT_FINGER_LINK_NAME = "px100/left_finger_link"
+
+PICKABLE_OBJ_MODEL_NAME = "t_object"
 PICKABLE_OBJ_SDF = f"""
+<?xml version="1.0" ?>
 <sdf version='1.6'>
-    <model name='{PICKABLE_OBJ_MODEL_NAME}'>
-        <static>false</static>
-        <link name='link'>
-            <collision name='collision'>
-                <geometry>
-                    <sphere>
-                        <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 1.5}</radius>
-                    </sphere>
-                </geometry>
-            </collision>
-            <visual name='visual'>
-                <geometry>
-                    <sphere>
-                        <radius>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 1.5 }</radius>
-                    </sphere>
-                </geometry>
-                <material>
-                    <ambient>1 0 0 1</ambient>  <!-- Red color -->
-                    <diffuse>1 0 0 1</diffuse>  <!-- Red color -->
-                </material>
-            </visual>
-        </link>
-        <inertial>
-            <mass>0.1</mass> <!-- Light mass -->
-            <inertia>
-                <ixx>0.0001</ixx>
-                <iyy>0.0001</iyy>
-                <izz>0.0001</izz>
-                <ixy>0</ixy>
-                <ixz>0</ixz>
-                <iyz>0</iyz>
-            </inertia>
-        </inertial>
-    </model>
+  <model name='{PICKABLE_OBJ_MODEL_NAME}'>
+    <link name="link">
+      <inertial>
+        <mass>0.04</mass>
+        <pose>0 0 -0.012 0 0 0</pose>
+        <inertia>
+          <ixx>0.0005</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0005</iyy>
+          <iyz>0</iyz>
+          <izz>0.0001</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision_vertical">
+        <pose>0 0 -0.02 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.01 0.01 0.04</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="collision_horizontal">
+        <pose>0 0 0.005 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.04 0.01 0.01</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual_vertical">
+        <pose>0 0 -0.02 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.01 0.01 0.04</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Wood</name>
+          </script>
+        </material>
+      </visual>
+      <visual name="visual_horizontal">
+        <pose>0 0 0.005 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.04 0.01 0.01</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Wood</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
 </sdf>
 """
-# TODO: Change to red cube but fix issues with co-ordinates
-#
-# PICKABLE_OBJ_MODEL_NAME = "red_cube"
-# PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = (
-#     0.01  # For cubes, we can use half the side length to represent the offset
-# )
-# PICKABLE_OBJ_SDF = f"""
-# <sdf version='1.6'>
-#     <model name='{PICKABLE_OBJ_MODEL_NAME}'>
-#         <static>false</static>
-#         <link name='link'>
-#             <collision name='collision'>
-#                 <geometry>
-#                     <box>
-#                         <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3}</size> <!-- Cube size -->
-#                     </box>
-#                 </geometry>
-#             </collision>
-#             <visual name='visual'>
-#                 <geometry>
-#                     <box>
-#                         <size>{PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3} {PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET * 3}</size> <!-- Cube size -->
-#                     </box>
-#                 </geometry>
-#                 <material>
-#                     <ambient>1 0 0 1</ambient>  <!-- Red color -->
-#                     <diffuse>1 0 0 1</diffuse>  <!-- Red color -->
-#                 </material>
-#             </visual>
-#         </link>
-#         <inertial>
-#             <mass>0.1</mass> <!-- Light mass -->
-#             <inertia>
-#                 <ixx>0.0001</ixx>
-#                 <iyy>0.0001</iyy>
-#                 <izz>0.0001</izz>
-#                 <ixy>0</ixy>
-#                 <ixz>0</ixz>
-#                 <iyz>0</iyz>
-#             </inertia>
-#         </inertial>
-#     </model>
-# </sdf>
-# """
 
 
 def unpause_gazebo():
@@ -217,12 +204,26 @@ def get_gazebo_model_pose(model_name: str) -> tuple:
             model_state.pose.position.y,
             model_state.pose.position.z,
         )
-        # rospy.loginfo(
-        #     f"Model '{self.model_name}' current position: {current_position}"
-        # )
         return current_position
     except rospy.ServiceException as e:
         rospy.logerr(f"Failed to get current pose of model: {e}")
+        return None
+
+
+def get_link_position(link_name: str, tf_listener):
+    try:
+        tf_listener.waitForTransform(
+            "world", link_name, rospy.Time(0), rospy.Duration(1.0)
+        )
+        (trans, rot) = tf_listener.lookupTransform("world", link_name, rospy.Time(0))
+        return np.array(trans)
+    except (
+        tf.Exception,
+        tf.LookupException,
+        tf.ConnectivityException,
+        tf.ExtrapolationException,
+    ) as e:
+        rospy.logerr(f"Failed to get transform for {link_name}: {e}")
         return None
 
 
@@ -231,7 +232,9 @@ class PickableGazeboObjectClient:
         self.model_name = model_name
         self.model_sdf = model_sdf
 
-    def spawn(self, position=(random.uniform(-1, 1), random.uniform(-1, 1), 0.1)):
+    def spawn(
+        self, position: tuple, roll: float = 0.0, pitch: float = 0.0, yaw: float = 0.0
+    ):
         """Spawn the model at the given position."""
         rospy.wait_for_service("/gazebo/spawn_sdf_model")
         try:
@@ -242,12 +245,19 @@ class PickableGazeboObjectClient:
             pose.position.x = position[0]
             pose.position.y = position[1]
             pose.position.z = position[2]
+            quaternion = quaternion_from_euler(roll, pitch, yaw)
+            pose.orientation.x = quaternion[0]
+            pose.orientation.y = quaternion[1]
+            pose.orientation.z = quaternion[2]
+            pose.orientation.w = quaternion[3]
             spawn_model_service(self.model_name, self.model_sdf, "", pose, "world")
             rospy.loginfo(f"Model '{self.model_name}' spawned at position: {position}")
         except rospy.ServiceException as e:
             rospy.logerr(f"Failed to spawn model: {e}")
 
-    def teleport(self, new_position):
+    def teleport(
+        self, new_position, roll: float = 0.0, pitch: float = 0.0, yaw: float = 0.0
+    ):
         """Teleport the model to a new position."""
         rospy.wait_for_service("/gazebo/set_model_state")
         try:
@@ -260,12 +270,13 @@ class PickableGazeboObjectClient:
             model_state.pose.position.x = new_position[0]
             model_state.pose.position.y = new_position[1]
             model_state.pose.position.z = new_position[2]
-            # model_state.pose.orientation.w = 1.0  # Keep default orientation
+            quaternion = quaternion_from_euler(roll, pitch, yaw)
+            model_state.pose.orientation.x = quaternion[0]
+            model_state.pose.orientation.y = quaternion[1]
+            model_state.pose.orientation.z = quaternion[2]
+            model_state.pose.orientation.w = quaternion[3]
             model_state.twist = Twist()  # Stop any velocity
             set_model_state_service(model_state)
-            # rospy.loginfo(
-            #     f"Model '{self.model_name}' teleported to new position: {new_position}"
-            # )
         except rospy.ServiceException as e:
             rospy.logerr(f"Failed to teleport model: {e}")
 
@@ -539,48 +550,17 @@ class PX100GazeboClient:
         ]
         return np.array(positions)
 
-    def _get_link_position(self, link_name: str):
-        try:
-            self.tf_listener.waitForTransform(
-                "world", link_name, rospy.Time(0), rospy.Duration(1.0)
-            )
-            (trans, rot) = self.tf_listener.lookupTransform(
-                "world", link_name, rospy.Time(0)
-            )
-            return np.array(trans)
-        except (
-            tf.Exception,
-            tf.LookupException,
-            tf.ConnectivityException,
-            tf.ExtrapolationException,
-        ) as e:
-            rospy.logerr(f"Failed to get transform for {link_name}: {e}")
-            return None
-
-    def get_gripper_prop_link_position(self):
-        return self._get_link_position("px100/gripper_prop_link")
-
-    def get_right_finger_link_position(self):
-        return self._get_link_position("px100/right_finger_link")
-
-    def get_left_finger_link_position(self):
-        return self._get_link_position("px100/left_finger_link")
-
 
 class PX100PickEnv(Env):
-    MAX_STEPS_PER_EPISODE = 20
-    PICKABLE_OBJ_START_POS = (0.25, 0.0, PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.001)
-    PICKABLE_OBJ_TARGET_POS = np.array(
-        [
-            0.3,
-            0.0,
-            PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.2,
-        ]
-    )
+    MAX_STEPS_PER_EPISODE = 15
+    PICKABLE_OBJ_START_POS = (0.2835, 0.0, 0.041)
+    PICKABLE_OBJ_START_YAW = 1.5707963  # Make the "T" shape face the claw
+    PICKABLE_OBJ_TARGET_POS = np.array([0.26, 0.0, 0.16])
     OBJ_TARGET_DIST_CLIP = (
         np.linalg.norm(np.array(PICKABLE_OBJ_START_POS) - PICKABLE_OBJ_TARGET_POS) * 1.3
     )
     GRABBER_OBJ_DIST_CLIP = 0.25
+    GRABBER_OBJ_DIST_REWARD_EXP_FACTOR = 2.5
     LIFT_CLEARANCE_TOL = 0.005
 
     def __init__(self):
@@ -592,21 +572,17 @@ class PX100PickEnv(Env):
             dtype=np.float32,
         )
         self.observation_space = spaces.Box(
-            low=np.array(
-                OBS_SPACE_LOW + [-np.inf, -np.inf, -np.inf]
-            ),  # Joint positions lower bounds + ball position
-            high=np.array(
-                OBS_SPACE_HIGH + [np.inf, np.inf, np.inf]
-            ),  # Joint positions upper bounds + ball position
-            dtype=np.float64,
+            low=np.array(OBS_SPACE_LOW), high=np.array(OBS_SPACE_HIGH), dtype=np.float32
         )
-
+        self.tf_listener = tf.TransformListener()
         self.px100 = PX100GazeboClient()
         self.pickable_object = PickableGazeboObjectClient(
             model_name=PICKABLE_OBJ_MODEL_NAME,
             model_sdf=PICKABLE_OBJ_SDF,
         )
-        self.pickable_object.spawn(position=self.PICKABLE_OBJ_START_POS)
+        self.pickable_object.spawn(
+            position=self.PICKABLE_OBJ_START_POS, yaw=self.PICKABLE_OBJ_START_YAW
+        )
 
         # Episode state tracking variables
         self.n_steps_elapsed = 0
@@ -615,11 +591,13 @@ class PX100PickEnv(Env):
         # Reward tracking
         self.reward_history = []
 
-    def random_position(self):
-        x = 0.25 + random.uniform(-0.1, 0.1)
-        y = 0.0 + random.uniform(-0.1, 0.1)
-        z = PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET + 0.005
-        return (x, y, z)
+    def get_randomized_object_start_state(self) -> Tuple[Tuple, float]:
+        """Return slightly randomized version of the pickable object's start state.
+
+        Returns:
+            (x,y,z), yaw
+        """
+        return self.PICKABLE_OBJ_START_POS, self.PICKABLE_OBJ_START_YAW  # FIXME
 
     def reset(self, seed=None, options=None):
         """
@@ -643,13 +621,11 @@ class PX100PickEnv(Env):
             left_finger=LEFT_FINGER_LIM[1],
         )
         # Move object to start location
-        ball_position = self.random_position()
-        self.pickable_object.teleport(new_position=ball_position)
+        start_pos, start_yaw = self.get_randomized_object_start_state()
+        self.pickable_object.teleport(new_position=start_pos, yaw=start_yaw)
 
         # Get the joint positions as the observation
-        observation = np.concatenate(
-            [self.px100.get_joint_positions(), np.array(ball_position)]
-        )
+        observation = self.px100.get_joint_positions()
 
         # Reset episode state tracking variables
         self.n_steps_elapsed = 0
@@ -662,10 +638,8 @@ class PX100PickEnv(Env):
     def step(self, action):
         """
         Take a step in the environment based on the given action.
-
         Args:
             action (np.ndarray): The action taken by the agent.
-
         Returns:
             observation (np.ndarray): The next observation after taking the action.
             reward (float): The reward received for taking the action.
@@ -694,8 +668,7 @@ class PX100PickEnv(Env):
 
         # Make observation of environment
         joint_positions = self.px100.get_joint_positions()
-        object_position = self.pickable_object.get_current_position()
-
+        object_position = get_gazebo_model_pose(PICKABLE_OBJ_MODEL_NAME)
         # Object->target distance reward component
         obj_target_dist = np.linalg.norm(
             np.array(object_position) - self.PICKABLE_OBJ_TARGET_POS
@@ -703,14 +676,20 @@ class PX100PickEnv(Env):
         clipped_obj_target_dist = clip_value(
             obj_target_dist, limits=(0, self.OBJ_TARGET_DIST_CLIP)
         )
-        obj_target_dist_reward = (
+        obj_target_dist_reward = (  # Normalize to b/w 0 and 1
             self.OBJ_TARGET_DIST_CLIP - clipped_obj_target_dist
         ) / self.OBJ_TARGET_DIST_CLIP
 
         # Grabber->object distance reward component
-        gripper_prop_link_position = self.px100.get_gripper_prop_link_position()
-        right_finger_link_position = self.px100.get_right_finger_link_position()
-        left_finger_link_position = self.px100.get_left_finger_link_position()
+        gripper_prop_link_position = get_link_position(
+            GRIPPER_PROP_LINK_NAME, self.tf_listener
+        )
+        right_finger_link_position = get_link_position(
+            RIGHT_FINGER_LINK_NAME, self.tf_listener
+        )
+        left_finger_link_position = get_link_position(
+            LEFT_FINGER_LINK_NAME, self.tf_listener
+        )
         if any(
             [
                 pos is None
@@ -742,27 +721,27 @@ class PX100PickEnv(Env):
                 ],
                 axis=0,
             )
-
             clipped_grabber_obj_dist = clip_value(
                 grabber_obj_dist, limits=(0, self.GRABBER_OBJ_DIST_CLIP)
             )
             grabber_object_dist_reward = (
-                64 * (self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist) ** 3
+                self.GRABBER_OBJ_DIST_CLIP - clipped_grabber_obj_dist
+            ) / self.GRABBER_OBJ_DIST_CLIP  # Normalize to b/w 0 and 1
+            # Exponentiate to make high rewards more potent and weak rewards less potent
+            grabber_object_dist_reward = (
+                grabber_object_dist_reward**self.GRABBER_OBJ_DIST_REWARD_EXP_FACTOR
             )
 
         # Combine reward components
         reward = obj_target_dist_reward + grabber_object_dist_reward
 
-        # Concatenate the joint positions and ball position
-        observation = np.concatenate([joint_positions, np.array(object_position)])
-
         # Check for episode exit conditions
         done = self.n_steps_elapsed >= self.MAX_STEPS_PER_EPISODE
-        truncated = False  # FIXME: True when stuck
+        truncated = False  # NOTE: False--we don't need to use this gymnasium flag
 
         self.reward_history.append(reward)
 
-        return observation, reward, done, truncated, {}
+        return joint_positions, reward, done, truncated, {}
 
     def save_reward_history(self, filename="reward_history.txt"):
         with open(filename, "w") as f:
@@ -813,7 +792,7 @@ if __name__ == "__main__":
     env = PX100PickEnv()
     model = SAC("MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR)
     # model = SAC.load(
-    #     f"{CHECKPOINT_DIR}/px100_checkpoint_180000_steps.zip",
+    #     f"{CHECKPOINT_DIR}/px100_checkpoint_3200000_steps",
     #     env=env,
     #     verbose=1,
     #     tensorboard_log=TENSORBOARD_LOG_DIR,
