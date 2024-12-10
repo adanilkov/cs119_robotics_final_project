@@ -88,7 +88,8 @@ class PX100_REAL:
             )
             print(f"Action: {action}")
             # bot.arm.go_to_home_pose()
-            self.bot.arm.set_joint_positions(action[:-2] * 2)
+            act = action[:-2]
+            self.bot.arm.set_joint_positions(act + self.get_joint_positions()[:-2])
             # self.bot.gripper.open()
             self.rate.sleep()
 
