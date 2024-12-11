@@ -6,7 +6,7 @@ CHECKPOINT_DIR = "./src/object_picker/checkpoints/"
 WAIST_LIM = (-3.141583, 3.141583)
 SHOULDER_LIM = (-1.937315, 1.867502)
 ELBOW_LIM = (-2.111848, 1.605703)
-WRIST_ANGLE_LIM = (-1.745329, 0) # Hard limit to 0, was 
+WRIST_ANGLE_LIM = (-1.745329, 0) # Hard limit to 0, preventing downward tilt
 RIGHT_FINGER_LIM = (-0.036, -0.017)
 LEFT_FINGER_LIM = (0.017, 0.036)
 
@@ -15,8 +15,9 @@ MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 100
 MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 25
 MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 25
 MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 8
-MAX_RIGHT_FINGER_DELTA = (RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) / 4  # was 15
-MAX_LEFT_FINGER_DELTA = (LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) / 4  # was 15
+# No longer needed since we are fixing the fingers to the open position
+# MAX_RIGHT_FINGER_DELTA = (RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) / 4  # was 15
+# MAX_LEFT_FINGER_DELTA = (LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) / 4  # was 15
 
 # Observation space bounds
 OBS_SPACE_LOW = [
@@ -24,16 +25,18 @@ OBS_SPACE_LOW = [
     SHOULDER_LIM[0],
     ELBOW_LIM[0],
     WRIST_ANGLE_LIM[0],
-    RIGHT_FINGER_LIM[0],
-    LEFT_FINGER_LIM[0],
+    # No longer observe this since we are fixing the fingers to the open position
+    # RIGHT_FINGER_LIM[0],
+    # LEFT_FINGER_LIM[0],
 ]
 OBS_SPACE_HIGH = [
     WAIST_LIM[1],
     SHOULDER_LIM[1],
     ELBOW_LIM[1],
     WRIST_ANGLE_LIM[1],
-    RIGHT_FINGER_LIM[1],
-    LEFT_FINGER_LIM[1],
+    # No longer observe this since we are fixing the fingers to the open position
+    # RIGHT_FINGER_LIM[1],
+    # LEFT_FINGER_LIM[1],
 ]
 
 # Action space bounds
@@ -42,16 +45,18 @@ ACTION_SPACE_LOW = [
     -MAX_SHOULDER_DELTA,
     -MAX_ELBOW_DELTA,
     -MAX_WRIST_ANGLE_DELTA,
-    -MAX_RIGHT_FINGER_DELTA,
-    -MAX_LEFT_FINGER_DELTA,
+    # No longer include this since we are fixing the fingers to the open position
+    # -MAX_RIGHT_FINGER_DELTA,
+    # -MAX_LEFT_FINGER_DELTA,
 ]
 ACTION_SPACE_HIGH = [
     MAX_WAIST_DELTA,
     MAX_SHOULDER_DELTA,
     MAX_ELBOW_DELTA,
     MAX_WRIST_ANGLE_DELTA,
-    MAX_RIGHT_FINGER_DELTA,
-    MAX_LEFT_FINGER_DELTA,
+    # No longer include this since we are fixing the fingers to the open position
+    # MAX_RIGHT_FINGER_DELTA,
+    # MAX_LEFT_FINGER_DELTA,
 ]
 
 GRIPPER_PROP_LINK_NAME = "px100/gripper_prop_link"

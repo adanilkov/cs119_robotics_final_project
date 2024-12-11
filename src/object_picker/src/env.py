@@ -100,7 +100,9 @@ class PX100PickEnv(Env):
         self.pickable_object.teleport(new_position=start_pos, yaw=start_yaw)
 
         # Get the joint positions as the observation
-        observation = self.px100.get_joint_positions()
+        joint_positions = self.px100.get_joint_positions()
+        # Ignore finger positions since we are fixing open grip
+        observation = joint_positions[:-2]
 
         # Reset episode state tracking variables
         self.n_steps_elapsed = 0
@@ -123,21 +125,16 @@ class PX100PickEnv(Env):
             info (dict): Additional information about the step.
         """
         current_joint_positions = self.px100.get_joint_positions()
+        # Ignore finger positions since we are fixing open grip
+        current_joint_positions = current_joint_positions[:-2]
         target_joint_positions = current_joint_positions + action
-
-        target_right_finger = RIGHT_FINGER_LIM[
-            0
-        ]  # target_joint_positions[4]  # Right finger target position
-        target_left_finger = -target_right_finger
 
         # Take action
         self.px100.set_joint_positions(
             waist=target_joint_positions[0],
             shoulder=target_joint_positions[1],
             elbow=target_joint_positions[2],
-            wrist_angle=target_joint_positions[3],
-            right_finger=target_right_finger,
-            left_finger=target_left_finger,
+            wrist_angle=target_joint_positions[3]
         )
 
         # Update episode state tracking variables
@@ -218,7 +215,8 @@ class PX100PickEnv(Env):
 
         self.reward_history.append(reward)
 
-        return joint_positions, reward, done, truncated, {}
+        # Ignore finger positions when pasing obs since we are fixing open grip
+        return joint_positions[:-2], reward, done, truncated, {}
 
     def save_reward_history(self, filename="reward_history.txt"):
         with open(filename, "w") as f:
