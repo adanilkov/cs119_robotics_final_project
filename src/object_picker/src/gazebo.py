@@ -1,8 +1,8 @@
+#!/usr/bin/env python
+"""Objects handling the interface between the gazebo simulation and training code"""
 import math
 
 import numpy as np
-"""Objects handling the interface between the gazebo simulation and training code"""
-
 import rospy
 import tf
 from geometry_msgs.msg import Pose
@@ -387,3 +387,8 @@ def test_px100_gazebo_client():
         right_finger=random.uniform(*RIGHT_FINGER_LIM) / 2,
         left_finger=random.uniform(*LEFT_FINGER_LIM) / 2,
     )
+
+
+if __name__ == "__main__":
+    test_pickable_gazebo_object_client()
+    test_px100_gazebo_client()

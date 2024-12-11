@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import rospy
 from stable_baselines3 import SAC
 import numpy as np
@@ -7,8 +8,11 @@ from control_msgs.msg import JointControllerState
 import math
 
 from interbotix_xs_modules.arm import InterbotixManipulatorXS
+# FIXME: denormalize action vector b4 enacting
+from utils import denormalize_action_vector
 
 #  `roslaunch interbotix_xsarm_control xsarm_control.launch robot_model:=px100 use_position_controllers:=true use_sim:=false`
+
 
 
 def clip_value(value, limits):

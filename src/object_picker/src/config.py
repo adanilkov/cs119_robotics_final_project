@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Misc
 TENSORBOARD_LOG_DIR = "./src/object_picker/logs/"
 CHECKPOINT_DIR = "./src/object_picker/checkpoints/"
@@ -21,42 +23,22 @@ MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 8
 
 # Observation space bounds
 OBS_SPACE_LOW = [
-    WAIST_LIM[0],
-    SHOULDER_LIM[0],
-    ELBOW_LIM[0],
-    WRIST_ANGLE_LIM[0],
-    # No longer observe this since we are fixing the fingers to the open position
-    # RIGHT_FINGER_LIM[0],
-    # LEFT_FINGER_LIM[0],
+    0, 0, 0, 0,
+    # No longer observe finger since we are fixing the fingers to the open position
 ]
 OBS_SPACE_HIGH = [
-    WAIST_LIM[1],
-    SHOULDER_LIM[1],
-    ELBOW_LIM[1],
-    WRIST_ANGLE_LIM[1],
-    # No longer observe this since we are fixing the fingers to the open position
-    # RIGHT_FINGER_LIM[1],
-    # LEFT_FINGER_LIM[1],
+    1, 1, 1, 1,
+    # No longer observe finger since we are fixing the fingers to the open position
 ]
 
 # Action space bounds
 ACTION_SPACE_LOW = [
-    -MAX_WAIST_DELTA,
-    -MAX_SHOULDER_DELTA,
-    -MAX_ELBOW_DELTA,
-    -MAX_WRIST_ANGLE_DELTA,
-    # No longer include this since we are fixing the fingers to the open position
-    # -MAX_RIGHT_FINGER_DELTA,
-    # -MAX_LEFT_FINGER_DELTA,
+    -1, -1, -1, -1,
+    # No longer act on finger since we are fixing the fingers to the open position
 ]
 ACTION_SPACE_HIGH = [
-    MAX_WAIST_DELTA,
-    MAX_SHOULDER_DELTA,
-    MAX_ELBOW_DELTA,
-    MAX_WRIST_ANGLE_DELTA,
-    # No longer include this since we are fixing the fingers to the open position
-    # MAX_RIGHT_FINGER_DELTA,
-    # MAX_LEFT_FINGER_DELTA,
+    1, 1, 1, 1,
+    # No longer act on finger since we are fixing the fingers to the open position
 ]
 
 GRIPPER_PROP_LINK_NAME = "px100/gripper_prop_link"
