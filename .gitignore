@@ -2,3 +2,5 @@
 /src/object_picker/checkpoints
 /src/object_picker/logs
 /logs
+/.catkin_tools
+/.vscode
