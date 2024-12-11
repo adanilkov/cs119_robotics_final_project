@@ -1,9 +1,0 @@
-# Goal
-float32 delay 
----
-# Result
-string log
-bool success
----
-# Feedback
-string log

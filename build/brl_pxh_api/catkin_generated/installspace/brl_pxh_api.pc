@@ -1,8 +1,0 @@
-prefix=/home/brl/object_picker/install
-
-Name: brl_pxh_api
-Description: Description of brl_pxh_api
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: actionlib roscpp rospy std_msgs

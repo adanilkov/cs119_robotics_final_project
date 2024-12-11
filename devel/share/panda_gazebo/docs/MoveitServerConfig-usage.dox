@@ -1,8 +1,0 @@
-\subsubsection usage Usage
-\verbatim
-<node name="panda_moveit_planner_server" pkg="panda_gazebo" type="panda_moveit_planner_server">
-  <param name="max_velocity_scaling_factor" type="double" value="1.0" />
-  <param name="max_acceleration_scaling_factor" type="double" value="1.0" />
-</node>
-\endverbatim
-

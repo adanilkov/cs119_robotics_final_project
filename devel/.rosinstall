@@ -1,2 +1,2 @@
 - setup-file:
-    local-name: /home/brl/object_picker/devel/setup.sh
+    local-name: /my_ros_data/cs119_robotics_final_project/devel/setup.sh
