@@ -1,8 +1,0 @@
-rosdeps/panda_gazebo/franka_ros/franka_control
-/home/brl/object_picker/devel/.private/franka_control/cmake.lock /home/brl/object_picker/devel/./cmake.lock
-/home/brl/object_picker/devel/.private/franka_control/share/franka_control/cmake/franka_controlConfig.cmake /home/brl/object_picker/devel/share/franka_control/cmake/franka_controlConfig.cmake
-/home/brl/object_picker/devel/.private/franka_control/share/franka_control/cmake/franka_controlConfig-version.cmake /home/brl/object_picker/devel/share/franka_control/cmake/franka_controlConfig-version.cmake
-/home/brl/object_picker/devel/.private/franka_control/lib/libfranka_state_controller.so /home/brl/object_picker/devel/lib/libfranka_state_controller.so
-/home/brl/object_picker/devel/.private/franka_control/lib/franka_control/franka_combined_control_node /home/brl/object_picker/devel/lib/franka_control/franka_combined_control_node
-/home/brl/object_picker/devel/.private/franka_control/lib/franka_control/franka_control_node /home/brl/object_picker/devel/lib/franka_control/franka_control_node
-/home/brl/object_picker/devel/.private/franka_control/lib/pkgconfig/franka_control.pc /home/brl/object_picker/devel/lib/pkgconfig/franka_control.pc
