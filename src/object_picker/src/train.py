@@ -55,7 +55,7 @@ RIGHT_FINGER_LIM = (-0.036, -0.017)
 LEFT_FINGER_LIM = (0.017, 0.036)
 
 # Max position change per step
-MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 50
+MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 100
 MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 25
 MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 25
 MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 25
@@ -109,15 +109,15 @@ PICKABLE_OBJ_SDF = f"""
   <model name='{PICKABLE_OBJ_MODEL_NAME}'>
     <link name="link">
       <inertial>
-        <mass>0.04</mass>
-        <pose>0 0 -0.012 0 0 0</pose>
+        <mass>0.1</mass>
+        <pose>0 0 0 0 0 0</pose>
         <inertia>
-          <ixx>0.0005</ixx>
+          <ixx>0.00125</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0.0005</iyy>
+          <iyy>0.00125</iyy>
           <iyz>0</iyz>
-          <izz>0.0001</izz>
+          <izz>0.00025</izz>
         </inertia>
       </inertial>
       <collision name="collision_vertical">
@@ -127,6 +127,14 @@ PICKABLE_OBJ_SDF = f"""
             <size>0.01 0.01 0.04</size>
           </box>
         </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+        </surface>
       </collision>
       <collision name="collision_horizontal">
         <pose>0 0 0.005 0 0 0</pose>
@@ -135,6 +143,14 @@ PICKABLE_OBJ_SDF = f"""
             <size>0.04 0.01 0.01</size>
           </box>
         </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+        </surface>
       </collision>
       <visual name="visual_vertical">
         <pose>0 0 -0.02 0 0 0</pose>
@@ -791,6 +807,7 @@ if __name__ == "__main__":
     time.sleep(1)  # Necessary after unpausing gazebo
     env = PX100PickEnv()
     model = SAC("MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR)
+
     # model = SAC.load(
     #     f"{CHECKPOINT_DIR}/px100_checkpoint_3200000_steps",
     #     env=env,
