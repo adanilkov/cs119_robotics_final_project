@@ -16,7 +16,7 @@ LEFT_FINGER_LIM = (0.017, 0.036)
 MAX_WAIST_DELTA = (WAIST_LIM[1] - WAIST_LIM[0]) / 100
 MAX_SHOULDER_DELTA = (SHOULDER_LIM[1] - SHOULDER_LIM[0]) / 25
 MAX_ELBOW_DELTA = (ELBOW_LIM[1] - ELBOW_LIM[0]) / 25
-MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 8
+MAX_WRIST_ANGLE_DELTA = (WRIST_ANGLE_LIM[1] - WRIST_ANGLE_LIM[0]) / 10
 # No longer needed since we are fixing the fingers to the open position
 # MAX_RIGHT_FINGER_DELTA = (RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) / 4  # was 15
 # MAX_LEFT_FINGER_DELTA = (LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) / 4  # was 15
@@ -41,7 +41,7 @@ ACTION_SPACE_HIGH = [
     # No longer act on finger since we are fixing the fingers to the open position
 ]
 
-GRIPPER_PROP_LINK_NAME = "px100/gripper_prop_link"
+GRABBER_PROP_LINK_NAME = "px100/gripper_prop_link"
 RIGHT_FINGER_LINK_NAME = "px100/right_finger_link"
 LEFT_FINGER_LINK_NAME = "px100/left_finger_link"
 
@@ -52,7 +52,7 @@ PICKABLE_OBJ_SDF = f"""
   <model name='{PICKABLE_OBJ_MODEL_NAME}'>
     <link name="link">
       <inertial>
-        <mass>0.1</mass>
+        <mass>0.38</mass>
         <pose>0 0 0 0 0 0</pose>
         <inertia>
           <ixx>0.00125</ixx>
@@ -64,10 +64,10 @@ PICKABLE_OBJ_SDF = f"""
         </inertia>
       </inertial>
       <collision name="collision_vertical">
-        <pose>0 0 -0.02 0 0 0</pose>
+        <pose>0 0 -0.029 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.01 0.01 0.04</size>
+            <size>0.01 0.01 0.058</size>
           </box>
         </geometry>
         <surface>
@@ -83,23 +83,23 @@ PICKABLE_OBJ_SDF = f"""
         <pose>0 0 0.005 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.04 0.01 0.01</size>
+            <size>0.057 0.01 0.01</size>
           </box>
         </geometry>
         <surface>
           <friction>
             <ode>
-              <mu>1.0</mu>
-              <mu2>1.0</mu2>
+              <mu>10.0</mu>
+              <mu2>10.0</mu2>
             </ode>
           </friction>
         </surface>
       </collision>
       <visual name="visual_vertical">
-        <pose>0 0 -0.02 0 0 0</pose>
+        <pose>0 0 -0.029 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.01 0.01 0.04</size>
+            <size>0.01 0.01 0.058</size>
           </box>
         </geometry>
         <material>
@@ -112,7 +112,7 @@ PICKABLE_OBJ_SDF = f"""
         <pose>0 0 0.005 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.04 0.01 0.01</size>
+            <size>0.057 0.01 0.01</size>
           </box>
         </geometry>
         <material>

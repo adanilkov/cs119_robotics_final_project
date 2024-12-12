@@ -116,8 +116,8 @@ class PX100GazeboClient:
     RIGHT_FINGER_STATE_TOPIC = "/px100/right_finger_controller/state"
     LEFT_FINGER_STATE_TOPIC = "/px100/left_finger_controller/state"
 
-    CLOSENESS_TOL = 0.01
-    MAX_WAIT_ITERS = 40
+    CLOSENESS_TOL = 0.0058
+    MAX_WAIT_ITERS = 25
 
     def __init__(self):
         self.rate = rospy.Rate(15)
@@ -209,7 +209,6 @@ class PX100GazeboClient:
             self.rate.sleep()
 
     def _wait_until_set_points_reached(self):
-        # TODO: Add timeout?
         iters_waited = 0
         while (
             not rospy.is_shutdown()
@@ -280,6 +279,8 @@ class PX100GazeboClient:
             #         print(f"{joint_name} - State: None")
             self.rate.sleep()
             iters_waited += 1
+        for _ in range(2):  # Brief manual sleep
+            self.rate.sleep()
 
     def set_joint_positions(
         self,

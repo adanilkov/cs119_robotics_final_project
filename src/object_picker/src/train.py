@@ -25,7 +25,7 @@ def train(
     if algorithm == "SAC":
         if load_checkpoint_path is None:
             model = SAC(
-                "MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR
+                "MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR, n_steps=4096
             )
         else:
             model = SAC.load(
@@ -37,7 +37,7 @@ def train(
     elif algorithm == "PPO":
         if load_checkpoint_path is None:
             model = PPO(
-                "MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR
+                "MlpPolicy", env, verbose=1, tensorboard_log=TENSORBOARD_LOG_DIR, n_steps=4096
             )
         else:
             model = PPO.load(
