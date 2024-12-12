@@ -33,6 +33,7 @@ def train(
                 env,
                 verbose=1,
                 tensorboard_log=TENSORBOARD_LOG_DIR,
+                n_steps=4096,
             )
     elif algorithm == "PPO":
         if load_checkpoint_path is None:
@@ -45,10 +46,12 @@ def train(
                 env,
                 verbose=1,
                 tensorboard_log=TENSORBOARD_LOG_DIR,
+                n_steps=4096,
             )
     checkpoint_name_prefix = f"px100_{algorithm}"
     checkpoint_name_prefix += "_pos-varied" if vary_object_position else "_static-pos"
     checkpoint_name_prefix += "_imit-learning" if use_imitation_learning else ""
+    
     checkpoint_callback = CheckpointCallback(
         save_freq=10000,
         save_path=CHECKPOINT_DIR,
@@ -69,4 +72,4 @@ def train(
 #      `roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=px100 use_position_controllers:=true gui:=false use_rviz:=true`
 
 if __name__ == "__main__":
-    train(algorithm="PPO", vary_object_position=False, use_imitation_learning=False)
+    train(algorithm="PPO", vary_object_position=False, use_imitation_learning=False, load_checkpoint_path=f"/my_ros_data/cs119_robotics_final_project/src/object_picker/checkpoints/px100_PPO_static-pos_130000_steps.zip")

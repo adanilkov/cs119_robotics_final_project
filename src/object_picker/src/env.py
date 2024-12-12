@@ -169,9 +169,9 @@ class RewardCalculator:
         # Combine and normalize to range [-1, 1]        
         reward = (
             2 * obj_target_dist_reward  # Double the weight
-            + grabber_object_dist_reward
+            + 2 * grabber_object_dist_reward
             + z_of_grabber_prop_link_reward_term
-        ) * 2 / 4 - 1
+        ) * 2 / 5 - 1
         return reward
 
 
@@ -317,8 +317,8 @@ class PX100PickEnv(Env):
         # Check for episode exit conditions
         done = self.n_steps_elapsed >= self.MAX_STEPS_PER_EPISODE
         truncated = False  # NOTE: False-we don't need to use this gymnasium flag
-        if done is True:
-            print(f"Episode final reward: {reward:.2f}")
+        # if done is True:
+        #     print(f"Episode final reward: {reward:.2f}")
 
         # Update episode state tracking variables
         self.n_steps_elapsed += 1
