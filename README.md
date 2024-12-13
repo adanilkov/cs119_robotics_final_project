@@ -1,4 +1,4 @@
-# PX100-RL-Trained Object Picker
+# PX100 RL Trained Object Picker
 
 ### Authors
 Sonny George & Alex Danilkovas
