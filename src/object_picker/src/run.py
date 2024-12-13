@@ -8,22 +8,11 @@ from control_msgs.msg import JointControllerState
 import math
 
 from interbotix_xs_modules.arm import InterbotixManipulatorXS
+
 # FIXME: denormalize action vector b4 enacting
-from utils import denormalize_action_vector
+from utils import denormalize_action_vector, clip_value
 
 #  `roslaunch interbotix_xsarm_control xsarm_control.launch robot_model:=px100 use_position_controllers:=true use_sim:=false`
-
-
-
-def clip_value(value, limits):
-    """
-    Clips the input value to the specified limits.
-    :param value: The input value to clip.
-    :param limits: A tuple (min, max) representing the joint limits.
-    :return: The clipped value.
-    """
-    min_limit, max_limit = limits
-    return max(min(value, max_limit), min_limit)
 
 
 class PX100_REAL:
