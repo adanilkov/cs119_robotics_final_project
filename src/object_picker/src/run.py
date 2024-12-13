@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import rospy
-from stable_baselines3 import SAC
+from stable_baselines3 import SAC, PPO
 import numpy as np
 from std_msgs.msg import Float64MultiArray, Float64
 from sensor_msgs.msg import JointState
 from control_msgs.msg import JointControllerState
 import math
+from config import WAIST_LIM, SHOULDER_LIM, ELBOW_LIM, WRIST_ANGLE_LIM
 
 from interbotix_xs_modules.arm import InterbotixManipulatorXS
 
@@ -19,18 +20,14 @@ class PX100_REAL:
 
     CLOSENESS_TOL = 0.01
     MAX_WAIT_ITERS = 40
+    HOME_POSE = [0, -0.15, 0, 0.0]
 
-    WAIST_LIM = (-3.141583, 3.141583)
-    SHOULDER_LIM = (-1.937315, 1.867502)
-    ELBOW_LIM = (-2.111848, 1.605703)
-    WRIST_ANGLE_LIM = (-1.745329, 2.146755)
-    RIGHT_FINGER_LIM = (-0.029, -0.0139)
-    LEFT_FINGER_LIM = (0.0139, 0.029)
+    LIMITS = [WAIST_LIM, SHOULDER_LIM, ELBOW_LIM, WRIST_ANGLE_LIM]
 
-    MODEL_PATH = "./src/object_picker/checkpoints/px100_checkpoint_670000_steps.zip"
+    MODEL_PATH = "src/object_picker/src/models/px100_PPO_static-pos_imit-learning_85000_steps.zip"
 
     def __init__(self, bot):
-        self.rate = rospy.Rate(0.25)
+        self.rate = rospy.Rate(0.6)
         self.bot = bot
 
         self.joint_states_sub = rospy.Subscriber(
@@ -41,7 +38,7 @@ class PX100_REAL:
             None  # NOTE: (WAIST, SHOULDER, EBLOW, WRIST, RIGHT_FINGER, LEFT_FINGER)
         )
 
-        self.model = SAC.load(self.MODEL_PATH)
+        self.model = PPO.load(self.MODEL_PATH)
 
     def joint_state_cb(self, msg):
         self.joint_states = msg.position
@@ -56,39 +53,38 @@ class PX100_REAL:
         NOTE: Order is [waist, should, elbow, wrist_angle, right_finger, left_finger]
         """
         self._await_subscriptions()
-        # positions = [
-        #     self.waist_state.process_value,
-        #     self.shoulder_state.process_value,
-        #     self.elbow_state.process_value,
-        #     self.wrist_angle_state.process_value,
-        #     self.right_finger_state.process_value,
-        #     # HACK: Left finger never publishes state
-        #     # self.left_finger_state.process_value,
-        #     self.current_approx_left_finger_position,
-        # ]
         joint_positions = np.array(self.joint_states)
         joint_positions = np.delete(joint_positions, 4)  # Delete gripper value (extra)
         return joint_positions
 
     def run(self):
-        bot.arm.go_to_home_pose()
+        # bot.arm.go_to_home_pose()
+        bot.arm.set_joint_positions(self.HOME_POSE)
 
         self.rate.sleep()
 
         while not rospy.is_shutdown():
             action, _ = self.model.predict(
-                self.get_joint_positions(), deterministic=True
+                self.get_joint_positions()[:-2], deterministic=True
             )
-            print(f"Action: {action}")
+
+            denormalized_action = denormalize_action_vector(action)
+
+            for i, joint_lim in enumerate(self.LIMITS):
+                denormalized_action[i] = clip_value(
+                    denormalized_action[i] * 2.5, joint_lim
+                )
+
+            print(f"Action: {denormalized_action}")
             # bot.arm.go_to_home_pose()
-            act = action[:-2]
-            self.bot.arm.set_joint_positions(act + self.get_joint_positions()[:-2])
-            # self.bot.gripper.open()
+            self.bot.arm.set_joint_positions(
+                denormalized_action + self.get_joint_positions()[:-2]
+            )
+
             self.rate.sleep()
 
 
 if __name__ == "__main__":
-    # rospy.init_node("PX100_Real_RL")
-    bot = InterbotixManipulatorXS("px100", "arm", "gripper")
+    bot = InterbotixManipulatorXS("px100", "arm", "gripper")  # This inits the node
     px100 = PX100_REAL(bot)
     px100.run()
