@@ -177,4 +177,4 @@ def train(
 #      `roslaunch interbotix_xsarm_gazebo xsarm_gazebo.launch robot_model:=px100 use_position_controllers:=true gui:=false use_rviz:=true`
 
 if __name__ == "__main__":
-    train(algorithm="PPO", vary_object_position=False, use_imitation_learning=True)
+    train(algorithm="PPO", vary_object_position=False, use_imitation_learning=False)
