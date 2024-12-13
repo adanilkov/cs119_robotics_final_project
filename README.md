@@ -32,7 +32,8 @@ Altough a ROS package, this repository is meant to be used as a workspace, `obje
 To see more details on both our process and general information (via our lab notebook), click [`here`](https://campusrover.github.io/labnotebook2/reports/2024/rl-trained_object_picker/)
 
 Video Walkthrough:
-https://youtu.be/48MWSUeu9Rg
+
+[![https://youtu.be/48MWSUeu9Rg](https://img.youtube.com/vi/48MWSUeu9Rg/0.jpg)](https://www.youtube.com/watch?v=48MWSUeu9Rg)
 
 ### Code Structure
 
