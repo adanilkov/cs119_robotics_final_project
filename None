@@ -1,7 +1,0 @@
-[31mRLException: Invalid roslaunch XML syntax: not well-formed (invalid token): line 37, column 8[0m
-[31mThe traceback for the exception was written to the log file[0m
-... logging to /home/brl/.ros/log/19e505ce-a9e7-11ef-a380-f76994a1cc3d/roslaunch-brl-Precision-Tower-3420-4107.log
-Checking log directory for disk usage. This may take a while.
-Press Ctrl-C to interrupt
-Done checking log file disk usage. Usage is <1GB.
-]2;/home/brl/object_picker/src/object_picker/launch/train_add_robot.launch
