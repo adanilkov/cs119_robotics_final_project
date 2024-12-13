@@ -137,11 +137,7 @@ PICKABLE_OBJ_SDF = f"""
           <box>
             <size>0.057 0.01 0.01</size>
           </box>
-        </geometry>58
-              <mu2>10.0</mu2>
-            </ode>
-          </friction>
-        </surface>
+        </geometry>
       </collision>
       <visual name="visual_vertical">
         <pose>0 0 -0.029 0 0 0</pose>
