@@ -80,6 +80,16 @@ The `src` of our package (`object-picker`) is structured as follows:
     python run.py
     ```
 
+### Reward Function
+
+The reward function is stateful and is as follows:
+
+1. **_'Assuming lifting position'_ term** term:
+    - **_'Get low'_ term:** Z-value of gripper
+    - **_'Get close'_ term:** Only once the gripper is low (and not before), the negative of the distance between the gripper and the object (since the forklift must get low before it can insert).
+        - Once the gripper is both low and close (and not before), the _'get low'_ term is removed and replaced with a constant `1.0` (to prevent the _'get low'_ term from discouraging the lifting up of the object).
+2. **_'Lifting the object'_ term:** The negative of the distance between the object and the goal position (raised in the air).
+
 ### Nodes Created
 
 | Node Created | Function |
