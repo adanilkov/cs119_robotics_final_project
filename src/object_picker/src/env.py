@@ -164,9 +164,12 @@ class RewardCalculator:
         # print(f"obj->target: {obj_target_dist_reward:.2f}")
         # print("@@@@@@@@@@@@\n")
 
-        if grabber_object_dist_reward < 0.2 and z_of_grabber_prop_link_reward_term > 0.9:
+        if (
+            grabber_object_dist_reward < 0.2
+            and z_of_grabber_prop_link_reward_term > 0.9
+        ):
             "cheese"
-        # Combine and normalize to range [-1, 1]        
+        # Combine and normalize to range [-1, 1]
         reward = (
             2 * obj_target_dist_reward  # Double the weight
             + 2 * grabber_object_dist_reward
@@ -190,7 +193,13 @@ class PX100PickEnv(Env):
     GRABBER_OBJ_DIST_REWARD_EXP_FACTOR = 2.5
     LIFT_CLEARANCE_TOL = 0.005
 
-    def __init__(self):
+    def __init__(self, episode_end_callback):
+        self.episode_end_callback = episode_end_callback
+        self.is_first_reset = True
+        # Episode state tracking variables
+        self.n_steps_elapsed = 0
+        self.cumulative_reward = 0
+
         super(PX100PickEnv, self).__init__()
 
         self.action_space = spaces.Box(
@@ -213,16 +222,14 @@ class PX100PickEnv(Env):
 
         self.reward_calculator = None
 
-        # Episode state tracking variables
-        self.n_steps_elapsed = 0
-
     def get_randomized_object_start_state(self) -> Tuple[Tuple, float]:
         """Return slightly randomized version of the pickable object's start state.
 
         Returns:
             (x,y,z), yaw
         """
-        return self.PICKABLE_OBJ_START_POS, self.PICKABLE_OBJ_START_YAW  # FIXME
+        # NOTE: Not implemented, deemed excessive
+        return self.PICKABLE_OBJ_START_POS, self.PICKABLE_OBJ_START_YAW
 
     def reset(self, seed=None, options=None):
         """
@@ -238,6 +245,11 @@ class PX100PickEnv(Env):
         """
         # Re-init reward calculator
         self.reward_calculator = RewardCalculator()
+        if self.is_first_reset is False:
+            self.episode_end_callback(self.cumulative_reward)
+        else:
+            self.is_first_reset = False
+        self.cumulative_reward = 0.0
 
         # Move arm to home position
         self.px100.set_joint_positions(
@@ -245,8 +257,10 @@ class PX100PickEnv(Env):
             shoulder=0.0,
             elbow=0.0,
             wrist_angle=0.0,
-            right_finger=(RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) * .75 + RIGHT_FINGER_LIM[0],
-            left_finger=(LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) * .25 + LEFT_FINGER_LIM[0],
+            right_finger=(RIGHT_FINGER_LIM[1] - RIGHT_FINGER_LIM[0]) * 0.75
+            + RIGHT_FINGER_LIM[0],
+            left_finger=(LEFT_FINGER_LIM[1] - LEFT_FINGER_LIM[0]) * 0.25
+            + LEFT_FINGER_LIM[0],
         )
 
         # Move object to start location
@@ -322,6 +336,7 @@ class PX100PickEnv(Env):
 
         # Update episode state tracking variables
         self.n_steps_elapsed += 1
+        self.cumulative_reward += reward
 
         # Ignoring fingers, normalize joint positions and return as observation
         norm_joint_positions = normalize_joint_positions(
@@ -331,128 +346,3 @@ class PX100PickEnv(Env):
             wrist_angle=joint_positions[3],
         )
         return norm_joint_positions[:-2], reward, done, truncated, {}
-
-
-
-## TEMP ##
-
-
-def manually_test_px100_env(actions, verbose=True):
-    """
-    Manually test the PX100PickEnv by feeding in a sequence of predefined actions
-    and inspecting the rewards and environment state.
-    
-    Args:
-        actions (list): List of actions to apply sequentially
-        verbose (bool): Whether to print detailed information about each step
-    
-    Returns:
-        list: Rewards for each action
-        list: Observations for each action
-    """
-    # Create the environment
-    env = PX100PickEnv()
-    
-    # Store rewards and observations
-    all_rewards = []
-    all_observations = []
-    
-    # Reset the environment and get initial observation
-    observation, _ = env.reset()
-    time.sleep(0.5)
-    all_observations.append(observation)
-
-    # Track current step
-    current_step = 1
-    
-    # Apply each action
-    for action in actions:        
-        # Take a step in the environment
-        next_observation, reward, done, _, _ = env.step(action)
-        print(f"{current_step}-rwrd: {reward:.2f}")
-        
-        # Store reward and observation
-        all_rewards.append(reward)
-        all_observations.append(next_observation)
-
-        if current_step >= 9:
-            "cheese"
-                
-        # Check if episode is done
-        if done:
-            print("Episode terminated")
-            break
-        
-        current_step += 1
-    
-    return all_rewards, all_observations
-
-# Example usage
-def example_usage():
-    # Example set of actions (these are normalized action vectors)
-    quick_example_actions = [
-        np.array([0, 0.0042087333, 0.9907400114, -0.9922135049]),
-    ]
-    example_actions = [
-        # Position in front
-        np.array([0, 0.0042087333, 0.9907400114, -0.9922135049]),
-        np.array([0, 0.0042087333, 0.9707400114, -0.9922135049]),
-        np.array([0, 0.1042087333, 0.1707400114, -0.9922135049]),
-        np.array([0, 0.2042087333, 0.0707400114, -0.9822135049]),
-        np.array([0, 0.9042087333, 0.0507400114, -0.9822135049]),
-        np.array([0, 0.9342087333, 0, -0.9722135049]),
-        np.array([0, 0.9542087333, 0, -0.9622135049]),
-        np.array([0, 0.9742087333, -0.13, -0.4]),
-        np.array([0, 0.9742087333, -0.27, -0.3]),
-        np.array([0, 0.9842087333, -0.28, -0.2]),
-
-        # Spear the pallette
-        np.array([0, 0.3185309123, -0.9989828766, 0.5864789389]),
-        np.array([0, 0.3185309123, -0.9989828766, 0.5564789389]),
-        np.array([0, 0.3085309123, -0.9969828766, 0.3964789389]),
-        np.array([0, 0.3185309123, -0.9969828766, 0.3864789389]),
-        np.array([0, 0.3185309123, -0.9869828766, 0.3764789389]),
-        np.array([0, 0.3185309123, -0.9769828766, 0.3764789389]),
-        np.array([0, 0.3185309123, -0.9669828766, 0.3464789389]),
-        np.array([0, 0.3185309123, -0.9369828766, 0.3764789389]),
-        np.array([0, 0.3185309123, -0.8269828766, 0.3064789389]),
-        
-        # Pick up
-        np.array([0, -0.14, -0.9406071632, 0.39]),
-        np.array([0, -0.14, -0.9406071632, 0.38]),
-        np.array([0, -0.14, -0.9406071632, 0.38]),
-        np.array([0, -0.1, -0.9406071632, 0.35]),
-        np.array([0, -0.0, -0.0, 0.15]),
-
-        # Chill
-        np.array([0, -0.1, -0.1406071632, 0.01]),
-        np.array([0, -0.1, -0.1406071632, 0.01]),
-        np.array([0, -0.1, -0.1406071632, 0.01]),
-        np.array([0, -0.1, -0.1406071632, 0.01]),
-        np.array([0, -0.1, -0.1406071632, 0.01]),
-    ]    
-    rewards, observations = manually_test_px100_env(quick_example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)
-    rewards, observations = manually_test_px100_env(example_actions)    
-
-
-# Uncomment to run the example
-# example_usage()
-
-if __name__ == "__main__":
-    import rospy
-    import time
-    from utils import unpause_gazebo
-
-    rospy.init_node("px100_reward_testing")
-
-    # unpause_gazebo()
-    # time.sleep(3)
-
-    example_usage()
