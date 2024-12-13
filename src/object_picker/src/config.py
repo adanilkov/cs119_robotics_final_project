@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+import numpy as np
 
 # Misc
 TENSORBOARD_LOG_DIR = "./src/object_picker/logs/"
@@ -28,9 +29,17 @@ OBS_SPACE_LOW = [
     0,
     0,
     0,
+    0,
+    0,
+    0,
+    0,
     # No longer observe finger since we are fixing the fingers to the open position
 ]
 OBS_SPACE_HIGH = [
+    1,
+    1,
+    1,
+    1,
     1,
     1,
     1,
@@ -44,9 +53,17 @@ ACTION_SPACE_LOW = [
     -1,
     -1,
     -1,
+    -1,
+    -1,
+    -1,
+    -1,
     # No longer act on finger since we are fixing the fingers to the open position
 ]
 ACTION_SPACE_HIGH = [
+    1,
+    1,
+    1,
+    1,
     1,
     1,
     1,
@@ -96,7 +113,7 @@ EXPERT_TRAJECTORY = [
     np.array([0, -0.1, -0.1406071632, 0.01]),
 ]
 
-
+PICKABLE_OBJECT_FRAME_ORIGIN_Z_OFFSET = 0.01
 PICKABLE_OBJ_MODEL_NAME = "t_object"
 PICKABLE_OBJ_SDF = f"""
 <?xml version="1.0" ?>
@@ -137,7 +154,11 @@ PICKABLE_OBJ_SDF = f"""
           <box>
             <size>0.057 0.01 0.01</size>
           </box>
-        </geometry>
+        </geometry>58
+              <mu2>10.0</mu2>
+            </ode>
+          </friction>
+        </surface>
       </collision>
       <visual name="visual_vertical">
         <pose>0 0 -0.029 0 0 0</pose>
