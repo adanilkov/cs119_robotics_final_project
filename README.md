@@ -7,7 +7,7 @@ Sonny George & Alex Danilkovas
 Noetic
 
 ### Dependencies 
-This package relies on the following software and libraries: 
+This workspace relies on the following software and libraries: 
 #### ROS Packages 
 - [`ros-noetic-interbotix-xsarm`](https://docs.trossenrobotics.com/interbotix_xsarms_docs/ros_interface/ros1/software_setup.html#amd64-architecture)
 - `ros-noetic-gazebo-ros` 
@@ -22,12 +22,17 @@ This package relies on the following software and libraries:
 
 ## Codebase Details
 
-Our ROS package, `object-picker`, supports the Interbotix px100 robot arm and includes:
+Altough a ROS package, this repository is meant to be used as a workspace, `object-picker` supports the Interbotix px100 robot arm and includes:
 
 1. **Training RL policies** (PPO or SAC) for picking up a "T"-shaped object.
 2. **Initializing policies with IL** (Behavioral Cloning).
 3. **Running trained policies** on the real robot.
 4. **Pre-trained models** from our experiments.
+
+To see more details on both our process and general information (via our lab notebook), click [`here`](https://campusrover.github.io/labnotebook2/reports/2024/rl-trained_object_picker/)
+
+Video Walkthrough:
+
 
 ### Code Structure
 
